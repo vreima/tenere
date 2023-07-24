@@ -1,1 +1,6 @@
-fastapi
+fastapi[all]
+uvicorn
+arrow
+loguru
+pandas
+pandera[fastapi]
