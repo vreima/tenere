@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "railway-fastapi-template"
+version = "0.1.0"
+description = "This example starts up a FastAPI server"
+authors = ["DeviousLab <deviouslab@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.100.0"
+uvicorn = "^0.22.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+target-version = "py311"
+select = [
+    "A",
+    "B",
+    "E",
+    "F",
+    "ISC",
+    "UP",
+    "RUF",
+    "SIM",
+    "ARG",
+    "PD",
+    "PLE",
+    "PLR",
+    "PLW"
+]
+ignore = [
+    "E712",
+    "E501"
+]
+
+[tool.ruff.per-file-ignores]
+"src/tests/*" = ["PLR2004"]
