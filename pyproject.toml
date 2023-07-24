@@ -1,8 +1,4 @@
 [tool.poetry]
-name = "railway-fastapi-template"
-version = "0.1.0"
-description = "This example starts up a FastAPI server"
-authors = ["DeviousLab <deviouslab@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
@@ -34,12 +30,21 @@ select = [
     "PD",
     "PLE",
     "PLR",
-    "PLW"
+    "PLW",
 ]
-ignore = [
-    "E712",
-    "E501"
-]
+ignore = ["E712", "E501"]
 
 [tool.ruff.per-file-ignores]
-"src/tests/*" = ["PLR2004"]
+"tests/*" = ["PLR2004"]
+
+[tool.pyright]
+include = ["tenere"]
+exclude = ["**/__pycache__"]
+ignore = ["tests"]
+venv = ".venv"
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+pythonVersion = "3.11"
+pythonPlatform = "Windows"
