@@ -1,4 +1,8 @@
 [tool.poetry]
+name = "Tenere"
+version = "0.1"
+authors = ["ville <ville.reima@gmail.com>"]
+description = "A telegram bot to help log gas and mileage information."
 license = "MIT"
 
 [tool.poetry.dependencies]

@@ -4,3 +4,5 @@ arrow
 loguru
 pandas
 pandera[fastapi]
+python-telegram-bot[http2]
+motor
