@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     mongo_url: str
     database: str
     collection: str
+    production_chat_id: int
 
     model_config = SettingsConfigDict(
         env_file="tenere/.env", env_file_encoding="utf-8", extra="allow"

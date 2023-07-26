@@ -1,22 +1,19 @@
 import datetime
 import math
 import re
-from collections.abc import Sequence
 from contextlib import asynccontextmanager
 from functools import partial
 from itertools import product
-from typing import Protocol, Self
+from typing import Self
 
 import arrow
 import motor.motor_asyncio
-import telegram
 from fastapi import FastAPI
 from loguru import logger
 from pydantic import BaseModel
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
-    CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
@@ -118,60 +115,64 @@ class DatabaseHandler:
         await self.collection.insert_one(document.model_dump())
 
 
-class SupportsHandlingFueling(Protocol):
-    async def write(self, document) -> None:
-        ...
+async def message_to_database(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, db: DatabaseHandler
+) -> None:
+    if update.message is None or update.effective_chat is None:
+        logger.error(f"Message is empty: {update=}")
+        return
+
+    logger.debug(update.effective_chat)
+
+    text: str = update.message.text or ""
+    fueled = FuelingInputModel.from_text(text, update.message.date)
+    if fueled:
+        await db.write(fueled)
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id, text=f"Tankattu {fueled}"
+        )
 
 
-class TelegramManager:
-    def __init__(self, handlers: Sequence[SupportsHandlingFueling]):
-        self.handlers = handlers
+async def message_echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.message is None or update.effective_chat is None:
+        logger.error(f"Message is empty: {update=}")
+        return
 
-    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if update.effective_chat is not None:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text="---")
+    logger.debug(update.effective_chat)
 
-    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if update.message is None or update.effective_chat is None:
-            return
-
-        print(update.message.date)
-
-        text: str = update.message.text or ""
-
-        logger.debug(update.message.chat)
-        logger.debug(update.message.chat_id)
-
-        fueled = FuelingInputModel.from_text(text, update.message.date)
-        if fueled:
-            if update.message.chat.type == telegram.Chat.GROUP:
-                for handler in self.handlers:
-                    await handler.write(fueled)
-
-                    await context.bot.send_message(
-                        chat_id=update.effective_chat.id, text=f"Tankattu {fueled}"
-                    )
-            else:
-                await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=f"[DEBUG] Tankattu {fueled}",
-                )
+    text: str = update.message.text or ""
+    fueled = FuelingInputModel.from_text(text, update.message.date)
+    if fueled:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id, text=f"(Debug) Tankattu {fueled}"
+        )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ARG001
     db = DatabaseHandler()
-    manager = TelegramManager([db])
 
     async with ApplicationBuilder().token(
         settings.telegram_token
     ).build() as application:
-        start_handler = CommandHandler("start", manager.start)
-        application.add_handler(start_handler)
-        echo_handler = MessageHandler(
-            filters.TEXT & (~filters.COMMAND), manager.handle_message
+        # start_handler = CommandHandler("start", manager.start)
+        # application.add_handler(start_handler)
+
+        production_msg_handler = MessageHandler(
+            filters.TEXT
+            & (~filters.COMMAND)
+            & filters.Chat(settings.production_chat_id),
+            partial(message_to_database, db=db),
         )
-        application.add_handler(echo_handler)
+        application.add_handler(production_msg_handler)
+
+        debug_msg_handler = MessageHandler(
+            filters.TEXT
+            & (~filters.COMMAND)
+            & (~filters.Chat(settings.production_chat_id)),
+            message_echo,
+        )
+        application.add_handler(debug_msg_handler)
 
         await application.start()
         await application.updater.start_polling()  # type: ignore
