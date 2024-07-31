@@ -109,9 +109,14 @@ class DatabaseHandler:
 
         await self.collection.insert_one(document.model_dump())
 
-    async def query(self) -> dict[str, float | datetime.datetime]:
+    async def query(self) -> list[dict[str, float | datetime.datetime | None]]:
         return [
-            {key: value for key, value in document if key != "_id"}
+            {
+                key: value
+                for key, value in document.items()
+                if key != "_id"
+                and (not isinstance(value, float) or not math.isnan(value))
+            }
             for document in await self.collection.find({}).to_list(None)
         ]
 
@@ -191,6 +196,6 @@ async def root() -> str:
 
 
 @app.get("/fuel")
-async def get_fuel() -> dict[str, float | datetime.datetime]:
+async def get_fuel() -> list[dict[str, float | datetime.datetime | None]]:
     db = DatabaseHandler()
     return await db.query()
