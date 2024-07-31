@@ -1,12 +1,11 @@
 {
-    "python.pythonPath": "c:\\Users\\35844\\Documents\\tenere\\.venv\\Scripts\\python.exe",
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true
-        },
-      },
-      "isort.args":["--profile", "black", "--float-to-top"],
-    
+  "python.pythonPath": "c:\\Users\\35844\\Documents\\tenere\\.venv\\Scripts\\python.exe",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "isort.args": ["--profile", "black", "--float-to-top"]
 }

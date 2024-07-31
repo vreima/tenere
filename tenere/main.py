@@ -12,12 +12,7 @@ from fastapi import FastAPI
 from loguru import logger
 from pydantic import BaseModel
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
 from tenere.config import settings
 
@@ -114,6 +109,9 @@ class DatabaseHandler:
 
         await self.collection.insert_one(document.model_dump())
 
+    async def query(self) -> dict[str, float | datetime.datetime]:
+        return await self.collection.find({}).to_list(None)
+
 
 async def message_to_database(
     update: Update, context: ContextTypes.DEFAULT_TYPE, db: DatabaseHandler
@@ -187,3 +185,9 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/")
 async def root() -> str:
     return "Hello, world!"
+
+
+@app.get("/fuel")
+async def get_fuel() -> str:
+    db = DatabaseHandler()
+    return await db.query()
