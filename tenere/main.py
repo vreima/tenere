@@ -110,7 +110,11 @@ class DatabaseHandler:
         await self.collection.insert_one(document.model_dump())
 
     async def query(self) -> dict[str, float | datetime.datetime]:
-        return await self.collection.find({}).to_list(None)
+        return {
+            key: value
+            for key, value in await self.collection.find({}).to_list(None)
+            if key != "_id"
+        }
 
 
 async def message_to_database(
@@ -188,6 +192,6 @@ async def root() -> str:
 
 
 @app.get("/fuel")
-async def get_fuel() -> str:
+async def get_fuel() -> dict[str, float | datetime.datetime]:
     db = DatabaseHandler()
     return await db.query()
