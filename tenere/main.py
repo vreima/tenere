@@ -110,11 +110,10 @@ class DatabaseHandler:
         await self.collection.insert_one(document.model_dump())
 
     async def query(self) -> dict[str, float | datetime.datetime]:
-        return {
-            key: value
-            for key, value in await self.collection.find({}).to_list(None)
-            if key != "_id"
-        }
+        return [
+            {key: value for key, value in document if key != "_id"}
+            for document in await self.collection.find({}).to_list(None)
+        ]
 
 
 async def message_to_database(
